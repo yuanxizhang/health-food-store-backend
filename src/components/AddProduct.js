@@ -1,60 +1,28 @@
-import React, { Component } from "react";
-import withContext from "../withContext";
-import { Redirect } from "react-router-dom";
-import axios from 'axios';
+import React, { useState } from 'react';
+import { Redirect, useHistory } from 'react-router-dom'
+import { v4 as uuid } from 'uuid';
+import { isAuthenticated, addProduct } from '../DataService';
 
-const initialState = {
-  name: "",
-  brand: "",
-  description: "",
-  instock: 0,
-};
+const AddProduct = () => {
+  let history = useHistory();
 
-class AddProduct extends Component {
-  constructor(props) {
-    super(props);
-    this.state = initialState;
-  }
+  const [name, setName] = useState("");
+  const [brand, setBrand] = useState("");
+  const [description, setDescription] = useState("");
+  const [instock, setInstock] = useState(0);
 
-  save = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const { name, brand, description, instock } = this.state;
-
-    if (name) {
-      const id = Math.random().toString(36).substring(2) + Date.now().toString(36);
-
-      await axios.post(
-        'http://localhost:3030/products',
-        { id, name, brand, description, instock },
-      )
-
-      this.props.context.addProduct(
-        {
-          name,
-          brand,
-          description,
-          instock: instock || 0
-        },
-        () => this.setState(initialState)
-      );
-      this.setState(
-        { flash: { status: 'is-success', msg: 'Product added successfully' }}
-      );
-
-    } else {
-      this.setState(
-        { flash: { status: 'is-danger', msg: 'Please enter name and price' }}
-      );
-    }
+    const product = {id: uuid(), name: name, brand: brand, discription: description }
+    addProduct(product); 
+    history.push('/')
+    setName('');
+    setBrand('');
+    setDescription('');
+    setInstock(0);
   };
 
-  handleChange = e => this.setState({ [e.target.name]: e.target.value, error: "" });
-
-  render() {
-    const { name, brand, description, instock } = this.state;
-    const { user } = this.props.context;
-
-    return !(user && user.isadmin) ? (
+  return !( isAuthenticated() )? (
       <Redirect to="/" />
     ) : (
       <>
@@ -65,7 +33,7 @@ class AddProduct extends Component {
         </div>
         <br />
         <br />
-        <form onSubmit={this.save}>
+        <form onSubmit={handleSubmit}>
           <div className="columns is-mobile is-centered">
             <div className="column is-one-third">
               <div className="field">
@@ -75,7 +43,7 @@ class AddProduct extends Component {
                   type="text"
                   name="name"
                   value={name}
-                  onChange={this.handleChange}
+                  onChange={(e) => setName(e.target.value)}
                   required
                 />
               </div>
@@ -85,8 +53,8 @@ class AddProduct extends Component {
                   className="input"
                   type="text"
                   name="brand"
-                  value={Brand}
-                  onChange={this.handleChange}
+                  value={brand}
+                  onChange={(e) => setBrand(e.target.value)}
                   required
                 />
               </div>
@@ -97,7 +65,7 @@ class AddProduct extends Component {
                   type="number"
                   name="instock"
                   value={instock}
-                  onChange={this.handleChange}
+                  onChange={(e) => setInstock(e.target.value)}
                 />
               </div>
               <div className="field">
@@ -107,15 +75,11 @@ class AddProduct extends Component {
                   type="text"
                   name="description"
                   value={description}
-                  onChange={this.handleChange}
+                  onChange={(e) => setDescription(e.target.value)}
                 />
               </div>
               
-              {this.state.flash && (
-                <div className={`notification ${this.state.flash.status}`}>
-                  {this.state.flash.msg}
-                </div>
-              )}
+              
               <div className="field is-clearfix">
                 <button
                   className="button is-primary is-outlined is-pulled-right"
@@ -130,7 +94,7 @@ class AddProduct extends Component {
         </form>
       </>
     );
-  }
 }
 
-export default withContext(AddProduct);
+
+export default AddProduct;

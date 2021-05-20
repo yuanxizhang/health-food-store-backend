@@ -1,55 +1,59 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
-import routes from './Config/routes.js';
-import { AuthProvider } from './Context';
-import AppRoute from './Components/AppRoute';
-import { isAuthenticated } from './dataService';
+import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
+import { GlobalProvider } from './context/GlobalState';
+import { isAuthenticated, logout } from './DataService';
+import history from './history';
+import Signup from './pages/Signup';
+import Login from './pages/Login';
+import ProductList from './components/ProductList';
+import Product from './components/Product';
+import AddProduct from './components/AddProduct';
+import PrivateRoute from './components/PrivateRoute';
  
 const App = () => {
   return (
-    <AuthProvider>
-        <Router>
+    <GlobalProvider>
+        <Router history={history}>
             <div>
-            <nav className="navbar navbar-default">
+            <nav className="navbar navbar-expand navbar-light bg-light">
             <div className="container-fluid container">
                 <div className="navbar-header">
                 <span className="navbar-brand"><Link to="/"> Health Food Store</Link></span>
                 </div>
-                <ul className="nav navbar-nav">
+                <ul className="navbar-nav mr-auto">
                 <li>
-                    <Link to="/">Home</Link>
+                    <Link to="/" className="nav-link">Home</Link>
                 </li>
                 <li>
-                    <Link to="/products/">Products</Link>
+                    <Link to="/products/" className="nav-link">Products</Link>
                 </li>
                 <li>
                     {
-                    ( isAuthenticated() ) ? <Link to="/products/add">Add Product</Link>:  ''
+                    ( isAuthenticated() ) ? <Link to="/add-product">Add Product</Link>:  ''
                     }
                 </li>
                 </ul>
                 <ul className="nav navbar-nav navbar-right">
                 {
                 ( isAuthenticated() ) ? 
-                    ( <li onClick={this.logOut}><a href="/">Log out</a> </li>) : 
+                    ( <li onClick={logout}><a href="/">Log out</a> </li>) : 
                     ( <li><Link to="/login">Log in</Link></li> )
                 }
                 </ul>
             </div>
             </nav>
             <Switch>
-                {routes.map((route) => (
-						<AppRoute
-							key={route.path}
-							path={route.path}
-							component={route.component}
-							isPrivate={route.isPrivate}
-						/>
-				))}
+                <Route exact path='/' component={ProductList} />  
+                <Route path="/login" component={Login} />
+                <Route path="/signup" render={(props) => <Signup {...props} />} />        
+                <Route path="/products" component={ProductList} />
+                <Route path="/products/:id" component={Product} />
+                <PrivateRoute path={"add-product"} component={AddProduct} />  
+                       
             </Switch>
             </div>
         </Router>
-    </AuthProvider>
+    </GlobalProvider>
   );
 }
  
